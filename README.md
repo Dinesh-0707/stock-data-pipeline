@@ -167,3 +167,14 @@ This project was built to match real data engineer job requirements:
 
 **Dinesh** — MSc AI with Business, Aston University  
 github.com/Dinesh-0707
+## Dashboard Preview
+
+### Overview Page
+![Overview](screenshots/dashboard_overview.png)
+
+### Performance Analysis
+![Performance](screenshots/dashboard_performance.png)
+
+### Volatility & Risk Analysis
+![Volatility](screenshots/dashboard_volatility.png)
+
