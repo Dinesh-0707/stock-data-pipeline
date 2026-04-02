@@ -1,0 +1,42 @@
+[2026-03-30T22:58:52.131+0000] {taskinstance.py:1957} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: stock_data_pipeline.build_gold_layer scheduled__2026-03-27T18:00:00+00:00 [queued]>
+[2026-03-30T22:58:52.139+0000] {taskinstance.py:1957} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: stock_data_pipeline.build_gold_layer scheduled__2026-03-27T18:00:00+00:00 [queued]>
+[2026-03-30T22:58:52.139+0000] {taskinstance.py:2171} INFO - Starting attempt 1 of 2
+[2026-03-30T22:58:52.152+0000] {taskinstance.py:2192} INFO - Executing <Task(BashOperator): build_gold_layer> on 2026-03-27 18:00:00+00:00
+[2026-03-30T22:58:52.158+0000] {standard_task_runner.py:60} INFO - Started process 3063 to run task
+[2026-03-30T22:58:52.163+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'stock_data_pipeline', 'build_gold_layer', 'scheduled__2026-03-27T18:00:00+00:00', '--job-id', '12', '--raw', '--subdir', 'DAGS_FOLDER/stock_pipeline_dag.py', '--cfg-path', '/tmp/tmp90m7os0i']
+[2026-03-30T22:58:52.166+0000] {standard_task_runner.py:88} INFO - Job 12: Subtask build_gold_layer
+[2026-03-30T22:58:52.219+0000] {task_command.py:423} INFO - Running <TaskInstance: stock_data_pipeline.build_gold_layer scheduled__2026-03-27T18:00:00+00:00 [running]> on host 053940882dca
+[2026-03-30T22:58:52.304+0000] {taskinstance.py:2481} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='dinesh' AIRFLOW_CTX_DAG_ID='stock_data_pipeline' AIRFLOW_CTX_TASK_ID='build_gold_layer' AIRFLOW_CTX_EXECUTION_DATE='2026-03-27T18:00:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2026-03-27T18:00:00+00:00'
+[2026-03-30T22:58:52.306+0000] {subprocess.py:63} INFO - Tmp dir root location: /tmp
+[2026-03-30T22:58:52.308+0000] {subprocess.py:75} INFO - Running command: ['/usr/bin/bash', '-c', 'python /opt/***/transformation/build_gold_layer.py']
+[2026-03-30T22:58:52.323+0000] {subprocess.py:86} INFO - Output:
+[2026-03-30T22:58:53.097+0000] {subprocess.py:93} INFO - Building gold layer...
+[2026-03-30T22:58:53.098+0000] {subprocess.py:93} INFO - Loaded 1000 rows across 10 stocks
+[2026-03-30T22:58:53.098+0000] {subprocess.py:93} INFO - 
+[2026-03-30T22:58:53.099+0000] {subprocess.py:93} INFO - Building daily summary...
+[2026-03-30T22:58:53.099+0000] {subprocess.py:93} INFO - Saved gold table: daily_summary (10 rows)
+[2026-03-30T22:58:53.099+0000] {subprocess.py:93} INFO - 
+[2026-03-30T22:58:53.100+0000] {subprocess.py:93} INFO - Building top movers...
+[2026-03-30T22:58:53.100+0000] {subprocess.py:93} INFO - Saved gold table: top_movers (10 rows)
+[2026-03-30T22:58:53.100+0000] {subprocess.py:93} INFO - 
+[2026-03-30T22:58:53.101+0000] {subprocess.py:93} INFO - Building weekly performance...
+[2026-03-30T22:58:53.101+0000] {subprocess.py:93} INFO - Saved gold table: weekly_performance (105 rows)
+[2026-03-30T22:58:53.101+0000] {subprocess.py:93} INFO - 
+[2026-03-30T22:58:53.102+0000] {subprocess.py:93} INFO - Gold layer complete!
+[2026-03-30T22:58:53.102+0000] {subprocess.py:93} INFO - 
+[2026-03-30T22:58:53.102+0000] {subprocess.py:93} INFO - Daily Summary:
+[2026-03-30T22:58:53.102+0000] {subprocess.py:93} INFO - symbol  close  daily_return       ma_7      ma_30
+[2026-03-30T22:58:53.103+0000] {subprocess.py:93} INFO -   AAPL 248.80     -1.617304 250.627143 258.879000
+[2026-03-30T22:58:53.103+0000] {subprocess.py:93} INFO -   AAPL 248.80     -1.617304 250.627143 258.879000
+[2026-03-30T22:58:53.104+0000] {subprocess.py:93} INFO -   AMZN 199.34     -3.951046 207.157143 209.092000
+[2026-03-30T22:58:53.104+0000] {subprocess.py:93} INFO -   AMZN 199.34     -3.951046 207.157143 209.092000
+[2026-03-30T22:58:53.104+0000] {subprocess.py:93} INFO -  GOOGL 274.34     -2.342304 292.402857 303.162667
+[2026-03-30T22:58:53.105+0000] {subprocess.py:93} INFO -  GOOGL 274.34     -2.342304 292.402857 303.162667
+[2026-03-30T22:58:53.105+0000] {subprocess.py:93} INFO -   META 525.72     -3.985097 580.784286 629.314667
+[2026-03-30T22:58:53.105+0000] {subprocess.py:93} INFO -   META 525.72     -3.985097 580.784286 629.314667
+[2026-03-30T22:58:53.106+0000] {subprocess.py:93} INFO -   MSFT 356.77     -2.513867 374.344286 393.944667
+[2026-03-30T22:58:53.106+0000] {subprocess.py:93} INFO -   MSFT 356.77     -2.513867 374.344286 393.944667
+[2026-03-30T22:58:53.163+0000] {subprocess.py:97} INFO - Command exited with return code 0
+[2026-03-30T22:58:53.189+0000] {taskinstance.py:1138} INFO - Marking task as SUCCESS. dag_id=stock_data_pipeline, task_id=build_gold_layer, execution_date=20260327T180000, start_date=20260330T225852, end_date=20260330T225853
+[2026-03-30T22:58:53.219+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 0
+[2026-03-30T22:58:53.237+0000] {taskinstance.py:3281} INFO - 0 downstream tasks scheduled from follow-on schedule check

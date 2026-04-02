@@ -1,0 +1,28 @@
+[2026-03-31T18:03:54.655+0000] {taskinstance.py:1957} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: stock_data_pipeline.ingest_stock_data scheduled__2026-03-30T18:00:00+00:00 [queued]>
+[2026-03-31T18:03:54.678+0000] {taskinstance.py:1957} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: stock_data_pipeline.ingest_stock_data scheduled__2026-03-30T18:00:00+00:00 [queued]>
+[2026-03-31T18:03:54.679+0000] {taskinstance.py:2171} INFO - Starting attempt 1 of 2
+[2026-03-31T18:03:54.714+0000] {taskinstance.py:2192} INFO - Executing <Task(BashOperator): ingest_stock_data> on 2026-03-30 18:00:00+00:00
+[2026-03-31T18:03:54.729+0000] {standard_task_runner.py:60} INFO - Started process 5120 to run task
+[2026-03-31T18:03:54.739+0000] {standard_task_runner.py:87} INFO - Running: ['***', 'tasks', 'run', 'stock_data_pipeline', 'ingest_stock_data', 'scheduled__2026-03-30T18:00:00+00:00', '--job-id', '13', '--raw', '--subdir', 'DAGS_FOLDER/stock_pipeline_dag.py', '--cfg-path', '/tmp/tmpnxrhrv59']
+[2026-03-31T18:03:54.746+0000] {standard_task_runner.py:88} INFO - Job 13: Subtask ingest_stock_data
+[2026-03-31T18:03:54.914+0000] {task_command.py:423} INFO - Running <TaskInstance: stock_data_pipeline.ingest_stock_data scheduled__2026-03-30T18:00:00+00:00 [running]> on host 053940882dca
+[2026-03-31T18:03:55.225+0000] {taskinstance.py:2481} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='dinesh' AIRFLOW_CTX_DAG_ID='stock_data_pipeline' AIRFLOW_CTX_TASK_ID='ingest_stock_data' AIRFLOW_CTX_EXECUTION_DATE='2026-03-30T18:00:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2026-03-30T18:00:00+00:00'
+[2026-03-31T18:03:55.229+0000] {subprocess.py:63} INFO - Tmp dir root location: /tmp
+[2026-03-31T18:03:55.233+0000] {subprocess.py:75} INFO - Running command: ['/usr/bin/bash', '-c', 'python /opt/***/ingestion/fetch_stock_data.py']
+[2026-03-31T18:03:55.265+0000] {subprocess.py:86} INFO - Output:
+[2026-03-31T19:13:56.694+0000] {subprocess.py:93} INFO - Starting stock data ingestion...
+[2026-03-31T19:13:56.700+0000] {subprocess.py:93} INFO - Successfully fetched data for AAPL
+[2026-03-31T19:13:56.701+0000] {subprocess.py:93} INFO - Saved AAPL data to data/bronze/AAPL_20260331_180359.json
+[2026-03-31T19:13:56.702+0000] {subprocess.py:93} INFO - Successfully fetched data for MSFT
+[2026-03-31T19:13:56.703+0000] {subprocess.py:93} INFO - Saved MSFT data to data/bronze/MSFT_20260331_191304.json
+[2026-03-31T19:13:56.704+0000] {subprocess.py:93} INFO - Successfully fetched data for GOOGL
+[2026-03-31T19:13:56.705+0000] {subprocess.py:93} INFO - Saved GOOGL data to data/bronze/GOOGL_20260331_191316.json
+[2026-03-31T19:13:56.706+0000] {subprocess.py:93} INFO - Successfully fetched data for AMZN
+[2026-03-31T19:13:56.707+0000] {subprocess.py:93} INFO - Saved AMZN data to data/bronze/AMZN_20260331_191332.json
+[2026-03-31T19:13:56.707+0000] {subprocess.py:93} INFO - Successfully fetched data for META
+[2026-03-31T19:13:56.708+0000] {subprocess.py:93} INFO - Saved META data to data/bronze/META_20260331_191344.json
+[2026-03-31T19:13:56.709+0000] {subprocess.py:93} INFO - Ingestion complete!
+[2026-03-31T19:13:56.754+0000] {subprocess.py:97} INFO - Command exited with return code 0
+[2026-03-31T19:13:56.856+0000] {taskinstance.py:1138} INFO - Marking task as SUCCESS. dag_id=stock_data_pipeline, task_id=ingest_stock_data, execution_date=20260330T180000, start_date=20260331T180354, end_date=20260331T191356
+[2026-03-31T19:13:56.928+0000] {local_task_job_runner.py:234} INFO - Task exited with return code 0
+[2026-03-31T19:13:57.005+0000] {taskinstance.py:3281} INFO - 1 downstream tasks scheduled from follow-on schedule check
