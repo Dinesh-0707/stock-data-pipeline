@@ -11,7 +11,7 @@ x-airflow-common:
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-    ALPHA_VANTAGE_API_KEY: "REDACTED_ALPHA_VANTAGE_KEY"
+    ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY}
   volumes:
     - ./orchestration:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
@@ -43,7 +43,7 @@ services:
       AIRFLOW__CORE__FERNET_KEY: ''
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      ALPHA_VANTAGE_API_KEY: "REDACTED_ALPHA_VANTAGE_KEY"
+      ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY}
       _AIRFLOW_DB_UPGRADE: 'true'
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: admin
