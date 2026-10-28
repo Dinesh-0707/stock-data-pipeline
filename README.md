@@ -1,11 +1,12 @@
 # Stock Market Data Pipeline
 
-An end-to-end data engineering project built to demonstrate production-grade 
-data pipeline skills using modern tools and cloud technologies.
+An end-to-end data engineering project that runs locally: scheduled
+ingestion, a medallion (Bronze/Silver/Gold) lakehouse, Delta Lake, dbt models
+on DuckDB, Airflow orchestration in Docker, and Power BI dashboards.
 
 ## Architecture
 ```
-Alpha Vantage API → Azure Function → Kafka/Event Hubs
+Alpha Vantage API → Python ingestion (requests)
                                           ↓
                                     Bronze Layer (Raw JSON)
                                           ↓
@@ -23,16 +24,14 @@ Alpha Vantage API → Azure Function → Kafka/Event Hubs
 | Layer | Technology |
 |-------|-----------|
 | Ingestion | Python, Alpha Vantage API |
-| Streaming | Apache Kafka / Azure Event Hubs |
-| Storage | Azure Data Lake Storage Gen2 |
-| File Format | Parquet, Delta Lake |
-| Transformation | Python, Pandas, PySpark |
+| Storage | Local file system (`data/` folder) |
+| File Format | JSON, Parquet, Delta Lake (`deltalake` / delta-rs) |
+| Transformation | Python, Pandas |
 | Modelling | dbt (data build tool) |
-| Orchestration | Apache Airflow |
-| Warehouse | DuckDB, Azure Synapse Analytics |
-| Data Quality | Great Expectations, dbt tests |
-| AI Feature | NL-to-SQL with Claude AI |
-| CI/CD | GitHub Actions, Docker |
+| Orchestration | Apache Airflow (Docker Compose) |
+| Warehouse | DuckDB |
+| Data Quality | Python validation checks, dbt tests |
+| Query Interface | NL-to-SQL prototype (rule-based) |
 | Visualisation | Power BI |
 
 ## Project Structure
@@ -41,7 +40,7 @@ stock-data-pipeline/
 │
 ├── ingestion/              # Data ingestion scripts
 │   ├── fetch_stock_data.py # Alpha Vantage API ingestion
-│   └── nl_to_sql.py        # NL-to-SQL AI engine
+│   └── nl_to_sql.py        # NL-to-SQL prototype (rule-based)
 │
 ├── transformation/         # Data transformation scripts
 │   ├── transform_stock_data.py  # Bronze to Silver
@@ -101,8 +100,12 @@ Alpha Vantage API with idempotent loading to prevent duplicates.
 - Three task DAG: ingest → transform → gold layer
 - Containerised with Docker for reproducibility
 
-### 6. NL-to-SQL AI Engine
-Natural language interface for querying stock data:
+### 6. NL-to-SQL Prototype
+A natural language interface for querying stock data. The current version
+maps question keywords to SQL templates (`generate_sql_mock` in
+`ingestion/nl_to_sql.py`) and runs them against DuckDB. The next step is to
+swap in an LLM that gets the schema in its prompt, with a read-only SQL check
+before execution.
 ```
 Question: Which stock had the highest closing price today?
 Generated SQL: SELECT symbol, close FROM mart_daily_summary 
@@ -154,14 +157,22 @@ This project was built to match real data engineer job requirements:
 | Pipeline architecture | End-to-end medallion architecture |
 | ETL/ELT pipelines | Python + dbt |
 | Apache Airflow | Automated DAG scheduling |
-| Spark / big data | PySpark ready architecture |
-| dbt | Full models, tests, docs |
-| Delta Lake | ACID transactions + time travel |
-| Data quality | dbt tests + Great Expectations |
-| Cloud (Azure) | ADLS Gen2 + Synapse ready |
-| BI layer | dbt semantic layer + Power BI |
-| AI features | NL-to-SQL with Claude AI |
-| CI/CD | GitHub Actions + Docker |
+| dbt | Staging and mart models, tests, docs |
+| Delta Lake | ACID transactions, MERGE upserts, time travel |
+| Data quality | Python validation + dbt tests |
+| Warehouse / SQL | DuckDB |
+| BI layer | Power BI dashboards |
+| Containerisation | Docker + Docker Compose (Airflow) |
+
+## Not Yet Implemented
+
+These would be the next steps toward a cloud deployment and are **not** in
+the current code:
+- Cloud storage and warehouse (e.g. Azure Data Lake Storage, Synapse)
+- Streaming ingestion (Kafka / Event Hubs)
+- Spark processing for larger volumes
+- An LLM-backed NL-to-SQL engine
+- CI/CD (GitHub Actions)
 
 ## Author
 
