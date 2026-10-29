@@ -1,0 +1,8 @@
+stock_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Relative to where dbt runs (the repo root); override with DUCKDB_PATH
+      path: "{{ env_var('DUCKDB_PATH', 'data/stock_analytics.duckdb') }}"
+      threads: 1

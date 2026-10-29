@@ -1,8 +1,11 @@
-import pandas as pd
+import argparse
 import json
 import os
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
 
 BRONZE_PATH = Path(__file__).parent.parent / "data/bronze"
 SILVER_PATH = Path(__file__).parent.parent / "data/silver"
@@ -30,19 +33,25 @@ def load_bronze_data(filepath):
     
     return df
 
-def add_features(df, symbol):
+def add_features(df, symbol, run_date):
     df["symbol"] = symbol
     df["daily_return"] = df["close"].pct_change() * 100
     df["ma_7"] = df["close"].rolling(window=7).mean()
     df["ma_30"] = df["close"].rolling(window=30).mean()
     df["volatility_7"] = df["daily_return"].rolling(window=7).std()
     df["price_range"] = df["high"] - df["low"]
+    # run_date says which snapshot a row came from, so downstream layers can
+    # keep only the newest version of each (symbol, date)
+    df["run_date"] = run_date
     df["ingested_at"] = datetime.now()
     
     return df
 
 def validate_data(df, symbol):
     issues = []
+    
+    if df.empty:
+        issues.append("No rows in bronze file")
     
     if df["close"].isnull().any():
         issues.append("Null values found in close price")
@@ -56,6 +65,9 @@ def validate_data(df, symbol):
     if (df["volume"] < 0).any():
         issues.append("Negative volume found")
     
+    if df["date"].duplicated().any():
+        issues.append("Duplicate trading dates found")
+    
     if issues:
         for issue in issues:
             print(f"VALIDATION FAILED for {symbol}: {issue}")
@@ -64,37 +76,43 @@ def validate_data(df, symbol):
     print(f"Validation passed for {symbol}")
     return True
 
-def save_silver_data(df, symbol):
+def save_silver_data(df, symbol, run_date):
     os.makedirs(SILVER_PATH, exist_ok=True)
     
-    today = datetime.now().strftime("%Y%m%d")
-    filename = SILVER_PATH / f"{symbol}_{today}.parquet"
-    
-    if filename.exists():
-        print(f"Silver data for {symbol} already exists today - skipping")
-        return
-    
+    # Overwrite so a re-run for the same date replaces bad data (idempotent)
+    filename = SILVER_PATH / f"{symbol}_{run_date}.parquet"
     df.to_parquet(filename, index=False)
     print(f"Saved silver data for {symbol} to {filename}")
 
 def main():
-    print("Starting transformation...")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--run-date", default=datetime.now().strftime("%Y%m%d"),
+                        help="Run date as YYYYMMDD (defaults to today)")
+    args = parser.parse_args()
     
-    bronze_files = list(BRONZE_PATH.glob("*.json"))
+    print(f"Starting transformation for run date {args.run_date}...")
+    
+    bronze_files = sorted(BRONZE_PATH.glob(f"*_{args.run_date}.json"))
     
     if not bronze_files:
-        print("No bronze files found!")
-        return
+        sys.exit(f"No bronze files found for run date {args.run_date}!")
     
+    failed = []
     for filepath in bronze_files:
         symbol = filepath.stem.split("_")[0]
         print(f"\nProcessing {symbol}...")
         
         df = load_bronze_data(filepath)
-        df = add_features(df, symbol)
+        if df.empty or not validate_data(df, symbol):
+            failed.append(symbol)
+            continue
         
-        if validate_data(df, symbol):
-            save_silver_data(df, symbol)
+        df = add_features(df, symbol, args.run_date)
+        save_silver_data(df, symbol, args.run_date)
+    
+    # Fail the task so Airflow stops before bad data reaches gold
+    if failed:
+        sys.exit(f"Validation failed for: {', '.join(failed)}")
     
     print("\nTransformation complete!")
 

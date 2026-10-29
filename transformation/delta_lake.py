@@ -1,20 +1,24 @@
-import pandas as pd
-from deltalake import DeltaTable, write_deltalake
-from pathlib import Path
-from datetime import datetime
 import os
+import sys
+from pathlib import Path
 
-SILVER_PATH = Path(__file__).parent.parent / "data/silver"
+from deltalake import DeltaTable, write_deltalake
+
+sys.path.insert(0, str(Path(__file__).parent))
+from silver_utils import load_latest_silver
+
 DELTA_PATH = Path(__file__).parent.parent / "data/delta"
 
 def convert_to_delta(symbol):
-    parquet_files = list(SILVER_PATH.glob(f"{symbol}_*.parquet"))
+    # All snapshots, deduplicated to the newest row per date, so the MERGE
+    # always picks up the latest data
+    df = load_latest_silver(symbol)
     
-    if not parquet_files:
+    if df is None:
         print(f"No parquet files found for {symbol}")
         return
     
-    df = pd.read_parquet(parquet_files[0])
+    df = df.drop(columns=["run_date"])
     delta_table_path = str(DELTA_PATH / symbol)
     
     if DeltaTable.is_deltatable(delta_table_path):

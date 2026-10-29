@@ -45,12 +45,16 @@ stock-data-pipeline/
 ├── transformation/         # Data transformation scripts
 │   ├── transform_stock_data.py  # Bronze to Silver
 │   ├── build_gold_layer.py      # Silver to Gold
-│   └── delta_lake.py            # Delta Lake conversion
+│   ├── delta_lake.py            # Delta Lake conversion
+│   ├── silver_utils.py          # Loads silver, newest row per (symbol, date)
+│   └── export_for_powerbi.py    # DuckDB marts to CSV for Power BI
 │
 ├── stock_analytics/        # dbt project
 │   ├── models/
 │   │   ├── staging/        # Staging models + tests
 │   │   └── marts/          # Business ready models
+│   ├── tests/              # Custom data tests
+│   ├── profiles.yml        # DuckDB connection (relative path)
 │   └── dbt_project.yml
 │
 ├── orchestration/          # Airflow DAGs
@@ -60,7 +64,8 @@ stock-data-pipeline/
 │   └── Dockerfile
 │
 ├── docker-compose.yml      # Airflow stack
-├── requirements.txt        # Python dependencies
+├── requirements.txt        # Pipeline dependencies
+├── requirements-dbt.txt    # dbt dependencies
 └── README.md
 ```
 
@@ -77,12 +82,18 @@ This project implements the **Medallion Architecture**:
 
 ### 1. Automated Data Ingestion
 Fetches daily stock data for AAPL, MSFT, GOOGL, AMZN and META from 
-Alpha Vantage API with idempotent loading to prevent duplicates.
+Alpha Vantage API. Every layer is written per run date (`SYMBOL_YYYYMMDD`),
+so re-running a day overwrites that day's files instead of adding duplicates.
+API calls retry on network errors and respect the free tier rate limit.
 
 ### 2. Data Transformation
 - Calculates daily returns, 7/30 day moving averages and volatility
-- Validates data quality before loading to Silver layer
-- Builds business ready Gold layer aggregates
+- Validates data quality before loading to Silver layer; a failed check fails
+  the Airflow task so bad data never reaches Gold
+- Each run lands a full ~100 day snapshot, so Gold, Delta and dbt keep only the
+  newest row per `(symbol, date)`
+- Builds business ready Gold layer aggregates (weekly returns are compounded,
+  not summed)
 
 ### 3. Delta Lake
 - Converts Parquet files to Delta format with ACID transactions
@@ -92,13 +103,14 @@ Alpha Vantage API with idempotent loading to prevent duplicates.
 ### 4. dbt Models
 - Staging models clean and standardise raw data
 - Mart models build business ready views with performance labels
-- 7 automated data quality tests
+- 8 automated data quality tests, including one row per `(symbol, date)`
 - Auto generated documentation with data lineage
 
 ### 5. Apache Airflow Orchestration
 - Full pipeline runs automatically at 6pm every weekday
-- Three task DAG: ingest → transform → gold layer
-- Containerised with Docker for reproducibility
+- DAG: ingest → silver → (gold layer, Delta Lake merge, `dbt build`)
+- Containerised with Docker for reproducibility; dbt runs in its own
+  virtualenv inside the image
 
 ### 6. NL-to-SQL Prototype
 A natural language interface for querying stock data. The current version
@@ -116,36 +128,40 @@ Result: GOOGL  189.42
 ## How to Run
 
 ### Prerequisites
-- Python 3.11+
-- Docker Desktop
-- Anaconda
+- Python 3.10–3.12
+- Docker Desktop (for Airflow)
+- A free [Alpha Vantage](https://www.alphavantage.co/support/#api-key) API key
 
-### Setup
+### Run with Airflow (Docker)
 ```bash
-# Clone the repo
 git clone https://github.com/Dinesh-0707/stock-data-pipeline.git
 cd stock-data-pipeline
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Set up environment variables
 cp .env.example .env
 # Add your Alpha Vantage API key to .env
 
-# Start Airflow
-docker-compose up -d
+docker-compose up -d --build
+```
+Open http://localhost:8080 (login `admin` / `admin`), unpause
+`stock_data_pipeline` and trigger it.
 
-# Run ingestion manually
-python ingestion/fetch_stock_data.py
+### Run locally (without Docker)
+All commands run from the repo root.
+```bash
+python -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -r requirements.txt -r requirements-dbt.txt
 
-# Run transformation
-python transformation/transform_stock_data.py
+cp .env.example .env
+# Add your Alpha Vantage API key to .env
+
+python ingestion/fetch_stock_data.py           # optional: --run-date YYYYMMDD
+python transformation/transform_stock_data.py  # same --run-date as ingestion
 python transformation/build_gold_layer.py
+python transformation/delta_lake.py
 
-# Run dbt models
-conda run -n dbt-env dbt run --project-dir stock_analytics
-conda run -n dbt-env dbt test --project-dir stock_analytics
+dbt build --project-dir stock_analytics --profiles-dir stock_analytics
+python ingestion/nl_to_sql.py
 ```
 
 ## JD Requirements Coverage
@@ -173,6 +189,7 @@ the current code:
 - Spark processing for larger volumes
 - An LLM-backed NL-to-SQL engine
 - CI/CD (GitHub Actions)
+- Unit tests (pytest) for the Python transformations
 
 ## Author
 

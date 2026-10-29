@@ -18,6 +18,7 @@ x-airflow-common:
     - ./ingestion:/opt/airflow/ingestion
     - ./transformation:/opt/airflow/transformation
     - ./data:/opt/airflow/data
+    - ./stock_analytics:/opt/airflow/stock_analytics
   depends_on:
     postgres:
       condition: service_healthy

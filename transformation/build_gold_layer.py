@@ -1,26 +1,11 @@
-import pandas as pd
 import os
+import sys
 from pathlib import Path
-from datetime import datetime
 
-SILVER_PATH = Path(__file__).parent.parent / "data/silver"
+sys.path.insert(0, str(Path(__file__).parent))
+from silver_utils import load_latest_silver
+
 GOLD_PATH = Path(__file__).parent.parent / "data/gold"
-
-def load_all_silver():
-    silver_files = list(SILVER_PATH.glob("*.parquet"))
-    
-    if not silver_files:
-        print("No silver files found!")
-        return None
-    
-    dfs = []
-    for filepath in silver_files:
-        df = pd.read_parquet(filepath)
-        dfs.append(df)
-    
-    combined = pd.concat(dfs, ignore_index=True)
-    print(f"Loaded {len(combined)} rows across {len(silver_files)} stocks")
-    return combined
 
 def build_daily_summary(df):
     latest_date = df["date"].max()
@@ -64,14 +49,21 @@ def build_top_movers(df):
     
     return top_movers
 
+def compound_return(daily_returns):
+    # Daily returns are percentages; chain them instead of adding them
+    returns = daily_returns.dropna() / 100
+    return ((1 + returns).prod() - 1) * 100
+
 def build_weekly_performance(df):
+    df = df.sort_values(["symbol", "date"]).copy()
     df["week"] = df["date"].dt.to_period("W")
     
     weekly = df.groupby(["symbol", "week"]).agg(
         avg_close=("close", "mean"),
         avg_volume=("volume", "mean"),
-        weekly_return=("daily_return", "sum"),
-        avg_volatility=("volatility_7", "mean")
+        weekly_return=("daily_return", compound_return),
+        avg_volatility=("volatility_7", "mean"),
+        trading_days=("date", "count")
     ).reset_index()
     
     weekly["week"] = weekly["week"].astype(str)
@@ -88,9 +80,9 @@ def save_gold_table(df, table_name):
 def main():
     print("Building gold layer...")
     
-    df = load_all_silver()
+    df = load_latest_silver()
     if df is None:
-        return
+        sys.exit("No silver files found!")
     
     print("\nBuilding daily summary...")
     daily_summary = build_daily_summary(df)
