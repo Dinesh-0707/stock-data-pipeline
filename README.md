@@ -109,8 +109,8 @@ API calls retry on network errors and respect the free tier rate limit.
 ### 5. Apache Airflow Orchestration
 - Full pipeline runs automatically at 6pm every weekday
 - DAG: ingest → silver → (gold layer, Delta Lake merge, `dbt build`)
-- Containerised with Docker for reproducibility; dbt runs in its own
-  virtualenv inside the image
+- Containerised with Docker for reproducibility; pipeline scripts and dbt
+  run in their own virtualenv inside the image
 
 ### 6. NL-to-SQL Prototype
 A natural language interface for querying stock data. The current version

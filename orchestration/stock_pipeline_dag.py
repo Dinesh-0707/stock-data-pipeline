@@ -16,7 +16,8 @@ default_args = {
 # run rewrites the same files instead of creating new ones.
 RUN_DATE = '{{ data_interval_end | ds_nodash }}'
 PROJECT_DIR = '/opt/airflow'
-DBT = '/opt/airflow/dbt_venv/bin/dbt'
+PYTHON = '/opt/airflow/venv/bin/python'
+DBT = '/opt/airflow/venv/bin/dbt'
 
 with DAG(
     'stock_data_pipeline',
@@ -30,32 +31,34 @@ with DAG(
 
     ingest_task = BashOperator(
         task_id='ingest_stock_data',
-        bash_command=f'python ingestion/fetch_stock_data.py --run-date {RUN_DATE}',
+        bash_command=f'{PYTHON} ingestion/fetch_stock_data.py --run-date {RUN_DATE}',
         cwd=PROJECT_DIR,
     )
 
     transform_task = BashOperator(
         task_id='transform_to_silver',
-        bash_command=f'python transformation/transform_stock_data.py --run-date {RUN_DATE}',
+        bash_command=f'{PYTHON} transformation/transform_stock_data.py --run-date {RUN_DATE}',
         cwd=PROJECT_DIR,
     )
 
     gold_task = BashOperator(
         task_id='build_gold_layer',
-        bash_command='python transformation/build_gold_layer.py',
+        bash_command=f'{PYTHON} transformation/build_gold_layer.py',
         cwd=PROJECT_DIR,
     )
 
     delta_task = BashOperator(
         task_id='merge_into_delta',
-        bash_command='python transformation/delta_lake.py',
+        bash_command=f'{PYTHON} transformation/delta_lake.py',
         cwd=PROJECT_DIR,
     )
 
     dbt_task = BashOperator(
         task_id='dbt_build',
-        # dbt build runs the models and their tests in dependency order
-        bash_command=f'{DBT} build --project-dir stock_analytics --profiles-dir stock_analytics',
+        # dbt build runs the models and their tests in dependency order.
+        # --no-partial-parse: target/ is shared with runs outside Docker, and a
+        # parse cache written by another dbt install crashes this one
+        bash_command=f'{DBT} build --project-dir stock_analytics --profiles-dir stock_analytics --no-partial-parse',
         cwd=PROJECT_DIR,
     )
 
